@@ -158,12 +158,74 @@
     (dolist (kv props ref)
       (puthash (car kv) (cdr kv) ref))))
 
-;; TODO: list all tests here
+;  (,(cite-apa--make-reference
+;     '(("kind" . ("article"))
+;       ("author" . ())
+;       ("year" . ())
+;       ("journal" . ())
+;       ("volume" . ())
+;       ("issue" . ())
+;       ("page-from" . ())
+;       ("page-to" . ())
+;       ("url" . ())
+;       ("title" . ())))
+;   "")
 
+;; A direct translation of the examples section from "Publication Manual Of The APA".
+;; This dataset enables us to check our implementation against known-good data.
 (defconst cite-apa--tests
-  `((,(cite-apa--make-reference '(("kind" . ("book"))
-                                  ("title" . ("A Book"))))
-     "nil. (nil). /A Book/. nil: nil.")))
+  `(
+    ;; 1
+    (,(cite-apa--make-reference
+       '(("kind" . ("article"))
+         ("author" . ("S M McCauley", "M H Christiansen"))
+         ("year" . ("2019"))
+         ("journal" . ("Psychological Review"))
+         ("volume" . ("126"))
+         ("issue" . ("1"))
+         ("page-from" . ("1"))
+         ("page-to" . ("51"))
+         ("doi" . ("https://doi.org/10.1037/rev0000126")) ; FIXME: maybe DOI should be specified in another format?
+         ("title" . ("Language learning as language use: A cross-linguistic model of child language development"))))
+     "McCauley, S. M., & Christiansen, M. H. (2019). Language learning as language use: A cross-linguistic model of child language development. Psychological Review, 126(1), 1–51. https://doi.org/10.1037/rev0000126")
+
+    ;; 2
+    (,(cite-apa--make-reference
+       '(("kind" . ("article"))
+         ("author" . ("E Ahmann", "L J Tuttle", "M Saviet", "S D Wright"))
+         ("year" . ("2018"))
+         ("journal" . ("Journal of Postsecondary Education and Disability"))
+         ("volume" . ("31"))
+         ("issue" . ("1"))
+         ("page-from" . ("17"))
+         ("page-to" . ("39"))
+         ("url" . ("https://www.ahead.org/professional-resources/publications/jped/archived-jped/jped-volume-31"))
+         ("title" . ("A descriptive review of ADHD coaching research: Implications for college students."))))
+     "Ahmann, E., Tuttle, L. J., Saviet, M., & Wright, S. D. (2018). A descriptive review of ADHD coaching research: Implications for college students. Journal of Postsecondary Education and Disability, 31(1), 17–39. https://www.ahead.org/professional-resources/publications/jped/archived-jped/jped-volume-31")
+
+    ;; 3
+    (,(cite-apa--make-reference
+       '(("kind" . ("article"))
+         ("author" . ("M Anderson"))
+         ("year" . ("2018"))
+         ("journal" . ("Educational Leadership"))
+         ("volume" . ("76"))
+         ("issue" . ("1"))
+         ("page-from" . ("26"))
+         ("page-to" . ("33"))
+         ("title" . ("Getting consistent with consequences"))))
+     "Anderson, M. (2018). Getting consistent with consequences. Educational Leadership, 76(1), 26–33.")
+    (,(cite-apa--make-reference
+       '(("kind" . ("article"))
+         ("author" . ("C Goldman"))
+         ("year" . ("2018"))
+         ("month" . ("November"))
+         ("day" . ("28"))
+         ("newspaper" . ("Chicago Tribune"))
+         ("title" . ("The complicated calibration of love"))))
+     "Goldman, C. (2018, November 28). The complicated calibration of love, especially in adoption. Chicago Tribune.")
+    )
+  )
 
 (defun cite-apa--test (input-output)
   "Given a INPUT-OUTPUT list in (input . output) format, return t if cite-apa produces output for input."

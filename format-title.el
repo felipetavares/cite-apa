@@ -37,8 +37,8 @@
 (defun cite-apa--info->str (key value)
   (cond ((equal key "volume-title") (format "%s" value)) ; FIXME: add in the
                                                          ; correct formatting
-        ((equal key "volume-number") (format "Vol. %s" value))
-        ((equal key "report-number") (format "Re. %s" value))
+        ((equal key "volume") (format "Vol. %s" value))
+        ((equal key "report") (format "Re. %s" value)) ; FIXME: is report = issue?
         ((equal key "version") (format "Version %s" value))
         ((equal key "edition") (format "%s ed." (cite-apa--format-ord
                                                  (string-to-number value))))))
