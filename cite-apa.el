@@ -27,11 +27,14 @@
 
 ;;; Code:
 
+(require 'cl)
+
 ;; Functions useful to formatting in many places
 (defun cite-apa--trim-dot (str)
-  (if (equal (substring str (1- (length str))) ".")
-      (substring str 0 (1- (length str)))
-    str))
+  (if (> (length str) 0)
+      (if (equal (substring str (1- (length str))) ".")
+          (substring str 0 (1- (length str)))
+        str)))
 
 (defun cite-apa--error (msg)
   (format "*%s*" (upcase msg)))
@@ -148,6 +151,32 @@
   (let* ((references (load-references cite-apa-ref-root))
          (ref-title (completing-read "Reference: " (references->titles references))))
     (insert (reference->string (find-reference-by-title references ref-title)))))
+
+(defun cite-apa--make-reference (props)
+  "Create a reference entry from alist PROPS."
+  (let ((ref (make-hash-table :test 'equal)))
+    (dolist (kv props ref)
+      (puthash (car kv) (cdr kv) ref))))
+
+;; TODO: list all tests here
+
+(defconst cite-apa--tests
+  `((,(cite-apa--make-reference '(("kind" . ("book"))
+                                  ("title" . ("A Book"))))
+     "nil. (nil). /A Book/. nil: nil.")))
+
+(defun cite-apa--test (input-output)
+  "Given a INPUT-OUTPUT list in (input . output) format, return t if cite-apa produces output for input."
+  (let ((input (car input-output))
+        (output (car (cdr input-output))))
+    (equal (reference->string input) output)))
+
+(defun cite-apa--test-all ()
+  "Check if every cite-apa test does return true."
+  (cl-every 'cite-apa--test cite-apa--tests))
+
+(ert-deftest cite-apa-test ()
+  (should (cite-apa--test-all)))
 
 (provide 'cite-apa)
 ;;; cite-apa.el ends here
