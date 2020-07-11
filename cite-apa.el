@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'ert)
 (require 'cl)
 
 ;; Functions useful to formatting in many places
