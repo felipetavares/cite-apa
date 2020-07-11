@@ -1,3 +1,15 @@
+# Overview
+
+`cite-apa` allows for APA-styled references to be inserted in an `org-mode` buffer inside EMACS.
+
+# Goals and Non-goals
+
+This project aims to be a comprehensive APA reference formatting software.
+
+I do not (at least initially) aim to provide in-text citations, only reference formatting.
+
+For it to be considered comprehensive, the goal is to pass a suite of tests designed to match every example provided in the Publication Manual of the APA.
+
 # Usage
 
 To cite using `cite-apa`, you first need to create a reference library.
