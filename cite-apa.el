@@ -27,6 +27,8 @@
 
 ;;; Code:
 
+;; FIXME: escape org-mode characters in input strings!
+
 (require 'cl)
 (require 'ert)
 
@@ -94,15 +96,27 @@
     ;; list
     (mapcan 'file->references ref-files-list)))
 
-(defun cite-apa--build-author-list (ref)
+(defun cite-apa--author-list (ref)
   ;; FIXME: keep ordering from the reference file
   (append (gethash "author" ref)
           (mapcar
            (lambda (org) `(t . ,org))
            (gethash "author-org" ref))))
 
+(defun cite-apa--date-list (ref)
+  nil)
+
 (defun format-authors (ref)
-  (cite-apa--format-authors (cite-apa--build-author-list ref)))
+  (cite-apa--format-authors (cite-apa--author-list ref)))
+
+(defun format-date (ref)
+  (cite-apa--format-dates (cite-apa--date-list ref)))
+
+(defun format-title (ref)
+  (cite-apa--format-id (car (gethash "title" ref))))
+
+(defun format-source (ref)
+  "Source formatting TBD")
 
 (defun format-apa-book (ref)
   "Returns a reference in APA book format"
@@ -113,9 +127,9 @@
           (car (gethash "location" ref))
           (car (gethash "publisher" ref))))
 
-;; TODO
 (defun format-apa-article (ref)
-  "Returns a reference in APA article format")
+  "Return an APA styled string from reference REF."
+  (string-join (list (format-authors ref) (format-date ref) (format-title ref) (format-source ref)) " "))
 
 (defun format-apa-webpage (ref)
   "Returns a reference in APA book format"
@@ -147,11 +161,40 @@
   "Searchs the bibliography and inserts an (org-mode) APA-formatted entry at point"
   (interactive)
   ;; Reference (bibliography) files can be added at this directory
-  (defvar cite-apa-ref-root "~/.local/share/cite-apa/")
+  (defvar cite-apa-library "~/.local/share/cite-apa/")
 
-  (let* ((references (load-references cite-apa-ref-root))
+  (let* ((references (load-references cite-apa-library))
          (ref-title (completing-read "Reference: " (references->titles references))))
     (insert (reference->string (find-reference-by-title references ref-title)))))
+
+;; Tests, derived from the APA Manual
+
+;; Templates to help while translating
+(cite-apa--make-reference
+   '(("kind" . ("article"))
+     ("author" . ())
+     ("year" . ())
+     ("journal" . ())
+     ("volume" . ())
+     ("issue" . ())
+     ("page-from" . ())
+     ("page-to" . ())
+     ("url" . ())
+     ("title" . ())))
+
+(ert-deftest cite-apa-ex5 ()
+  (should (equal (reference->string (cite-apa--make-reference
+                                     '(("kind" . ("article"))
+                                       ("author" . ())
+                                       ("year" . ())
+                                       ("journal" . ())
+                                       ("volume" . ())
+                                       ("issue" . ())
+                                       ("page-from" . ())
+                                       ("page-to" . ())
+                                       ("url" . ())
+                                       ("title" . ()))))
+                 "")))
 
 (defun cite-apa--make-reference (props)
   "Create a reference entry from alist PROPS."
@@ -159,24 +202,11 @@
     (dolist (kv props ref)
       (puthash (car kv) (cdr kv) ref))))
 
-;; Tests, derived from the APA Manual
-
-;  (cite-apa--make-reference
-;     '(("kind" . ("article"))
-;       ("author" . ())
-;       ("year" . ())
-;       ("journal" . ())
-;       ("volume" . ())
-;       ("issue" . ())
-;       ("page-from" . ())
-;       ("page-to" . ())
-;       ("url" . ())
-;       ("title" . ())))
-
 (ert-deftest cite-apa-test-ex1 ()
+  "Journal article with a DOI."
   (should (equal (reference->string (cite-apa--make-reference
                                      '(("kind" . ("article"))
-                                       ("author" . ("S M McCauley", "M H Christiansen"))
+                                       ("author" . ("S M McCauley" "M H Christiansen"))
                                        ("year" . ("2019"))
                                        ("journal" . ("Psychological Review"))
                                        ("volume" . ("126"))
@@ -188,9 +218,10 @@
                  "McCauley, S. M., & Christiansen, M. H. (2019). Language learning as language use: A cross-linguistic model of child language development. Psychological Review, 126(1), 1–51. https://doi.org/10.1037/rev0000126")))
 
 (ert-deftest cite-apa-test-ex2 ()
+  "Journal article without a DOI, with a nondatabase URL."
   (should (equal (reference->string (cite-apa--make-reference
                                      '(("kind" . ("article"))
-                                       ("author" . ("E Ahmann", "L J Tuttle", "M Saviet", "S D Wright"))
+                                       ("author" . ("E Ahmann" "L J Tuttle" "M Saviet" "S D Wright"))
                                        ("year" . ("2018"))
                                        ("journal" . ("Journal of Postsecondary Education and Disability"))
                                        ("volume" . ("31"))
@@ -202,6 +233,7 @@
                  "Ahmann, E., Tuttle, L. J., Saviet, M., & Wright, S. D. (2018). A descriptive review of ADHD coaching research: Implications for college students. Journal of Postsecondary Education and Disability, 31(1), 17–39. https://www.ahead.org/professional-resources/publications/jped/archived-jped/jped-volume-31")))
 
 (ert-deftest cite-apa-test-ex3 ()
+  "Journal, magazine, or newspaper article without a DOI, from most academic research databases or print version."
   (should (equal (reference->string (cite-apa--make-reference
                                      '(("kind" . ("article"))
                                        ("author" . ("M Anderson"))
@@ -222,6 +254,69 @@
                                        ("newspaper" . ("Chicago Tribune"))
                                        ("title" . ("The complicated calibration of love")))))
                  "Goldman, C. (2018, November 28). The complicated calibration of love, especially in adoption. Chicago Tribune.")))
+
+(ert-deftest cite-apa-ex4 ()
+  "Journal article with a DOI, 21 or more authors"
+  (should (equal (reference->string (cite-apa--make-reference
+                                     '(("kind" . ("article"))
+                                       ("author" . ("E Kalnay" "M Kanamitsu" "R Kistler"
+                                                    "W Collins" "D Deaven" "L Gandin"
+                                                    "M Iredell" "S Saha" "G White"
+                                                    "J Woollen" "Y Zhu" "M Chelliah"
+                                                    "W Ebisuzaki" "W Higgins" "J Janowiak"
+                                                    "K C Mo" "C Ropelewski" "J Wang"
+                                                    "A Leetmaa" "Filler Author" "D Joseph"))
+                                       ("year" . ("1996"))
+                                       ("journal" . ("Bulletin of the American Meteorological Society"))
+                                       ("volume" . ("77"))
+                                       ("issue" . ("3"))
+                                       ("page-from" . ("437"))
+                                       ("page-to" . ("471"))
+                                       ("title" . ("The NCEP/NCAR 40-year reanalysis project"))
+                                       ("doi" . ("http://doi.org/fg6rf9")))))
+                 "Kalnay, E., Kanamitsu, M., Kistler, R., Collins, W., Deaven, D., Gandin, L., Iredell, M., Saha, S., White, G., Woollen, J., Zhu, Y., Chelliah, M., Ebisuzaki, W., Higgins, W., Janowiak, J., Mo, K. C., Ropelewski, C., Wang, J., Leetmaa, A., ... Joseph, D. (1996). The NCEP/NCAR 40-year reanalysis project. Bulletin of the American Meteorological Society, 77(3), 437–471. http://doi.org/fg6rf9")))
+
+(ert-deftest cite-apa-ex5 ()
+  "Journal article with a DOI, combination of individual and group authors"
+  (should (equal (reference->string (cite-apa--make-reference
+                                     '(("kind" . ("article"))
+                                       ("author" . ("R De Vries" "M Nieuwenhuijze" "S E Nieuwenhuijze"))
+                                       ("author-org" . ("the members of Midwifery Science Work Group"))
+                                       ("year" . ("2013"))
+                                       ("journal" . ("Midwifery"))
+                                       ("volume" . ("29"))
+                                       ("issue" . ("10"))
+                                       ("page-from" . ("1122"))
+                                       ("page-to" . ("1128"))
+                                       ("doi" . ("https://doi.org/10.1016/j.midw.2013.07.007"))
+                                       ("title" . ("What does it take to have a strong and independent profession of midwifery? Lessons from the Netherlands")))))
+                 "De Vries, R., Nieuwenhuijze, M., yk, S. E., & the members of Midwifery Science Work Group. (2013). What does it take to have a strong and independent profession of midwifery? Lessons from the Netherlands. Midwifery, 29(10), 1122–1128. https://doi.org/10.1016/j.midw.2013.07.007")))
+
+(ert-deftest cite-apa-ex6 ()
+  "Journal article with an article number or eLocator"
+  (should (equal (reference->string (cite-apa--make-reference
+                                     '(("kind" . ("article"))
+                                       ("author" . ("D Burin" "K Kilteni" "M rabuffetti" "M Slater" "L Pia"))
+                                       ("year" . ("2019"))
+                                       ("journal" . ("PLOS ONE"))
+                                       ("volume" . ("14"))
+                                       ("issue" . ("1"))
+                                       ("doi" . ("https://doi.org/10.1371/journal.pone.0209899"))
+                                       ("elocator" . ("e0209899"))
+                                       ("title" . ("Body ownership increases the interference between observed and executed movements")))))
+                 "Burin, D., Kilteni, K., Rabuffetti, M., Slater, M., & Pia, L. (2019). Body ownership increases the interference between observed and executed movements. PLOS ONE, 14(1), Article e0209899. https://doi.org/10.1371/journal.pone.0209899")))
+
+(ert-deftest cite-apa-ex7 ()
+  "Journal article, advance online publication"
+  (should (equal (reference->string (cite-apa--make-reference
+                                     '(("kind" . ("article"))
+                                       ("author" . ("S M Huestegge" "T Raettig" "L Huestegge"))
+                                       ("year" . ("2019"))
+                                       ("journal" . ("Experimental Psychology"))
+                                       ("online-advance" . (""))
+                                       ("doi" . ("https://doi.org/10.1027/1618-3169/a000440"))
+                                       ("title" . ("Are face-incongruent voices harder to process? Effects of face–voice gender incongruency on basic cognitive information processing")))))
+                 "Huestegge, S. M., Raettig, T., & Huestegge, L. (2019). Are face-incongruent voices harder to process? Effects of face–voice gender incongruency on basic cognitive information processing. Experimental Psychology. Advance online publication. https://doi.org/10.1027/1618-3169/a000440")))
 
 (provide 'cite-apa)
 ;;; cite-apa.el ends here
