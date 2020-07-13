@@ -35,10 +35,10 @@
     ;; TODO: find a better way to group those together
     ; Insert years into the list
     (dolist (year (gethash "year" ref))
-      (let ((date (make-hash-table)))
+      (let ((date (make-hash-table :test 'equal)))
         (puthash "year" year date)
-        (push dates date)))
-    ))
+        (push date dates)))
+    dates))
 
 (defun cite-apa--multipart-date? (date)
   (or (gethash "month" date) (gethash "season" date)))

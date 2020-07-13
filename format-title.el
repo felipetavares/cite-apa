@@ -47,8 +47,11 @@
   ;; FIXME: sort in specific order?
   (let ((info-list))
     ; Build a list of formatted string properties
-    (maphash (lambda (k v)
-               (push (cite-apa--info->str k v) info-list)) info)
+    ; (only for books and reports)
+    (if (or (equal (gethash "kind" info) "book")
+            (equal (gethash "kind" info) "report"))
+        (maphash (lambda (k v)
+                   (push (cite-apa--info->str k v) info-list)) info))
     ; Merge and return
     (let ((information (reverse (remove 'nil info-list))))
       (if information (string-join information ", ")))))

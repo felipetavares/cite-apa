@@ -104,7 +104,7 @@
            (gethash "author-org" ref))))
 
 (defun cite-apa--date-list (ref)
-  nil)
+  (cite-apa--reference->dates ref))
 
 (defun format-authors (ref)
   (cite-apa--format-authors (cite-apa--author-list ref)))
@@ -112,8 +112,26 @@
 (defun format-date (ref)
   (cite-apa--format-dates (cite-apa--date-list ref)))
 
+(defun cite-apa--title-info (ref)
+  (let ((info (make-hash-table :test 'equal)))
+    (maphash (lambda (k v) (puthash k (car v) info)) ref)
+    info))
+
+(defun cite-apa--part-of-greater-whole (ref)
+  (let ((kind (car (gethash "kind" ref))))
+    (or (equal kind "article")
+        (equal kind "chapter"))))
+
+;; TODO
+(defun cite-apa--non-academic-work (ref)
+  (let ((kind (car (gethash "kind" ref))))
+    nil))
+
 (defun format-title (ref)
-  (cite-apa--format-id (car (gethash "title" ref))))
+  (cite-apa--format-id (car (gethash "title" ref))
+                       (cite-apa--title-info ref)
+                       (cite-apa--part-of-greater-whole ref)
+                       (cite-apa--non-academic-work ref)))
 
 (defun format-source (ref)
   "Source formatting TBD")
@@ -129,7 +147,11 @@
 
 (defun format-apa-article (ref)
   "Return an APA styled string from reference REF."
-  (string-join (list (format-authors ref) (format-date ref) (format-title ref) (format-source ref)) " "))
+  (string-join (list (format-authors ref)
+                     (format-date ref)
+                     (format-title ref)
+                     (format-source ref))
+               " "))
 
 (defun format-apa-webpage (ref)
   "Returns a reference in APA book format"
@@ -170,31 +192,31 @@
 ;; Tests, derived from the APA Manual
 
 ;; Templates to help while translating
-(cite-apa--make-reference
-   '(("kind" . ("article"))
-     ("author" . ())
-     ("year" . ())
-     ("journal" . ())
-     ("volume" . ())
-     ("issue" . ())
-     ("page-from" . ())
-     ("page-to" . ())
-     ("url" . ())
-     ("title" . ())))
-
-(ert-deftest cite-apa-ex5 ()
-  (should (equal (reference->string (cite-apa--make-reference
-                                     '(("kind" . ("article"))
-                                       ("author" . ())
-                                       ("year" . ())
-                                       ("journal" . ())
-                                       ("volume" . ())
-                                       ("issue" . ())
-                                       ("page-from" . ())
-                                       ("page-to" . ())
-                                       ("url" . ())
-                                       ("title" . ()))))
-                 "")))
+; (cite-apa--make-reference
+;    '(("kind" . ("article"))
+;      ("author" . ())
+;      ("year" . ())
+;      ("journal" . ())
+;      ("volume" . ())
+;      ("issue" . ())
+;      ("page-from" . ())
+;      ("page-to" . ())
+;      ("url" . ())
+;      ("title" . ())))
+;
+; (ert-deftest cite-apa-ex5 ()
+;   (should (equal (reference->string (cite-apa--make-reference
+;                                      '(("kind" . ("article"))
+;                                        ("author" . ())
+;                                        ("year" . ())
+;                                        ("journal" . ())
+;                                        ("volume" . ())
+;                                        ("issue" . ())
+;                                        ("page-from" . ())
+;                                        ("page-to" . ())
+;                                        ("url" . ())
+;                                        ("title" . ()))))
+;                  "")))
 
 (defun cite-apa--make-reference (props)
   "Create a reference entry from alist PROPS."
@@ -296,7 +318,7 @@
   "Journal article with an article number or eLocator"
   (should (equal (reference->string (cite-apa--make-reference
                                      '(("kind" . ("article"))
-                                       ("author" . ("D Burin" "K Kilteni" "M rabuffetti" "M Slater" "L Pia"))
+                                       ("author" . ("D Burin" "K Kilteni" "M Rabuffetti" "M Slater" "L Pia"))
                                        ("year" . ("2019"))
                                        ("journal" . ("PLOS ONE"))
                                        ("volume" . ("14"))
