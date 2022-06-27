@@ -91,3 +91,5 @@
                         extra-info)
                        (cite-apa--format-description title extra-info non-academic-work)))
     " ")))
+
+(provide 'format-title)

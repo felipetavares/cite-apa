@@ -1,4 +1,4 @@
-;;; ~/.doom.d/cite-apa/format-author.el -*- lexical-binding: t; -*-
+;;; ~/.doom.d/cite-apa/format-authors.el -*- lexical-binding: t; -*-
 
 ;; APA author formatting
 
@@ -71,3 +71,5 @@
               (cite-apa--trim-dot (cite-apa--format-authors-20 (seq-subseq authors 0 19) t))
               (cite-apa--format-author (car (last authors))))
     (cite-apa--format-authors-20 authors)))
+
+(provide 'format-authors)

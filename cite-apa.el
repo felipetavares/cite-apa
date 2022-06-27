@@ -42,9 +42,9 @@
 (defun cite-apa--error (msg)
   (format "*%s*" (upcase msg)))
 
-(load! "format-authors.el")
-(load! "format-dates.el")
-(load! "format-title.el")
+(require 'format-authors)
+(require 'format-dates)
+(require 'format-title)
 
 (defun file->lines (file-path)
   (with-temp-buffer

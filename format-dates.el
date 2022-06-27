@@ -62,3 +62,5 @@
   (if (cite-apa--valid-dates? dates)
       (format "(%s)." (string-join (mapcar 'cite-apa--format-date dates) "-"))
     (cite-apa--error "invalid dates in reference")))
+
+(provide 'format-dates)
